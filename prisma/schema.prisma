@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model Client {
+  id        Int      @id @default(autoincrement())
+  number    String   @unique // Número do WhatsApp
+  message   String?  // Última mensagem enviada
+  imageUrl  String?  // URL da imagem enviada
+  sent      Boolean  @default(false) // Indica se a mensagem foi enviada
+  sentAt    DateTime? // Data e hora do envio (null se não enviado)
+  createdAt DateTime @default(now()) 
+
+  // Relacionamentos
+  messages  MessageLog[]
+}
+
+model MessageTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String   // Nome do template (ex: "Promoção Black Friday")
+  message   String   // Mensagem personalizada
+  imageUrl  String?  // URL da imagem associada ao template
+  createdAt DateTime @default(now())
+
+  templates MessageLog[]
+}
+
+model MessageLog {
+  id        Int      @id @default(autoincrement())
+  clientId  Int      // Relacionado ao cliente que recebeu a mensagem
+  templateId Int?    // Relacionado ao template usado (se aplicável)
+  sent      Boolean  // Se a mensagem foi enviada com sucesso
+  sentAt    DateTime? // Data e hora do envio
+  createdAt DateTime @default(now()) 
+
+  // Relacionamentos
+  client    Client   @relation(fields: [clientId], references: [id])
+  template  MessageTemplate? @relation(fields: [templateId], references: [id])
+}
